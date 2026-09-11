@@ -6,10 +6,10 @@
     "emergency_recall": 0.8443935926773455,
     "distance_mae": 9.390469400738604,
     "distance_rmse": 15.047384575347376,
-    "parameters": "",
-    "latency_ms_batch_1": "",
-    "latency_ms_batch_256": "",
-    "latency_device": "",
+    "parameters": 0,
+    "latency_ms_batch_1": 0.0010264000011375174,
+    "latency_ms_batch_256": null,
+    "latency_device": "cpu (Python scalar baseline)",
     "test_samples": 3195
   },
   {
@@ -20,9 +20,9 @@
     "distance_mae": 3.906770749430497,
     "distance_rmse": 7.321495666819292,
     "parameters": 2980,
-    "latency_ms_batch_1": "",
-    "latency_ms_batch_256": "",
-    "latency_device": "",
+    "latency_ms_batch_1": 0.055140000040410087,
+    "latency_ms_batch_256": 0.1839349999499973,
+    "latency_device": "cpu",
     "test_samples": 3195
   },
   {
@@ -33,9 +33,9 @@
     "distance_mae": 3.2273935033106107,
     "distance_rmse": 5.99502834897532,
     "parameters": 16996,
-    "latency_ms_batch_1": "",
-    "latency_ms_batch_256": "",
-    "latency_device": "",
+    "latency_ms_batch_1": 0.4582640000444371,
+    "latency_ms_batch_256": 2.919815000059316,
+    "latency_device": "cpu",
     "test_samples": 3195
   },
   {
@@ -46,9 +46,9 @@
     "distance_mae": 2.9972247571524098,
     "distance_rmse": 5.42543165161002,
     "parameters": 44036,
-    "latency_ms_batch_1": 1.6596160001063254,
-    "latency_ms_batch_256": 1.8765979999443516,
-    "latency_device": "cuda",
+    "latency_ms_batch_1": 1.5691659999720287,
+    "latency_ms_batch_256": 5.213831000000937,
+    "latency_device": "cpu",
     "test_samples": 3195
   },
   {
@@ -59,9 +59,9 @@
     "distance_mae": 3.3951478903359664,
     "distance_rmse": 6.110628413963237,
     "parameters": 40196,
-    "latency_ms_batch_1": 1.4029140000639018,
-    "latency_ms_batch_256": 1.5465569999651052,
-    "latency_device": "cuda",
+    "latency_ms_batch_1": 1.040140999975847,
+    "latency_ms_batch_256": 4.674338000040734,
+    "latency_device": "cpu",
     "test_samples": 3195
   }
 ]

@@ -53,12 +53,13 @@ def draw_loss_curves():
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     endpoint = {(r['scenario_id'], r['time_s']) for r in load(V21 / 'gru_without_brake_state_test_predictions.csv')}
+    deployment = json.loads((ROOT / 'deployment_metrics.json').read_text(encoding='utf-8'))['models']
     output = []
     for key, label, prediction_path, metric_path in SPECS:
         rows = [r for r in load(prediction_path) if (r['scenario_id'], r['time_s']) in endpoint]
         metric = calculate(rows)
-        extra = json.loads(metric_path.read_text(encoding='utf-8')) if metric_path else {}
-        output.append({'model': label, 'accuracy': metric['accuracy'], 'macro_f1': metric['macro_f1'], 'emergency_recall': metric['emergency_recall'], 'distance_mae': metric['distance_mae'], 'distance_rmse': metric['distance_rmse'], 'parameters': extra.get('parameters', count_parameters_from_checkpoint(key)), 'latency_ms_batch_1': extra.get('latency_ms_batch_1', ''), 'latency_ms_batch_256': extra.get('latency_ms_batch_256', ''), 'latency_device': extra.get('latency_device', ''), 'test_samples': metric['test_samples']})
+        extra = deployment[key]
+        output.append({'model': label, 'accuracy': metric['accuracy'], 'macro_f1': metric['macro_f1'], 'emergency_recall': metric['emergency_recall'], 'distance_mae': metric['distance_mae'], 'distance_rmse': metric['distance_rmse'], 'parameters': extra['parameters'], 'latency_ms_batch_1': extra['latency_ms_batch_1'], 'latency_ms_batch_256': extra['latency_ms_batch_256'], 'latency_device': extra['latency_device'], 'test_samples': metric['test_samples']})
         draw_confusion(key, rows)
     fields = list(output[0])
     with open(ROOT / 'aligned_endpoint_comparison.csv', 'w', newline='', encoding='utf-8') as handle:

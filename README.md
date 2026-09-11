@@ -91,13 +91,14 @@ V3 严格复用 V2.1 的生成数据、标签、scenario-level train/validation/
 - **Lightweight Transformer**：48 维输入投影与正弦位置编码、2 层/4 heads Transformer Encoder，并施加上三角 causal mask；仅取末端 token 进入共享分类与制动距离回归头。
 - 所有神经模型使用 endpoint 训练标签计算 class weights、weighted CrossEntropy + 0.05×SmoothL1、AdamW、固定 seed，并只以 validation early stopping 选择 checkpoint。5/10/20 步只可作为 validation ablation；主测试固定为 10 步，不能据 test 调参。
 
-V3 的最终表以 GRU 的 10-step test endpoints 为唯一索引，将 Physics、MLP、GRU、TCN、Transformer 重新过滤到同一端点；因此它不会把 MLP/Physics 的全部帧结果误与时序模型相比。训练与评估会同时记录 checkpoint、history、预测、混淆矩阵、参数量，以及 RTX 3060 上 warm-up 后同步测量的 batch-1 / batch-256 推理延迟。
+V3 的最终表以 GRU 的 10-step test endpoints 为唯一索引，将 Physics、MLP、GRU、TCN、Transformer 重新过滤到同一端点；因此它不会把 MLP/Physics 的全部帧结果误与时序模型相比。训练与评估会同时记录 checkpoint、history、预测、混淆矩阵、参数量，以及在记录的运行环境中 warm-up 后同步测量的 batch-1 / batch-256 推理延迟。
 
 ```powershell
 py -m training.train_v3 --model tcn --sequence-length 10
 py -m training.evaluate_v3 --model tcn --sequence-length 10
 py -m training.train_v3 --model transformer --sequence-length 10
 py -m training.evaluate_v3 --model transformer --sequence-length 10
+py -m training.benchmark_v3
 py -m training.report_v3
 ```
 
@@ -119,12 +120,16 @@ py -m training.report_v3_ablation --model transformer
 
 主表严格对齐到 45 个 held-out 场景的 3,195 个 GRU 可评估端点；完整机器可读结果在 `results/v3/aligned_endpoint_comparison.csv`。
 
-| Model | Accuracy | Macro F1 | Emergency Recall | Distance MAE | Params | RTX 3060 batch-1 latency |
+| Model | Accuracy | Macro F1 | Emergency Recall | Distance MAE | Params | batch-1 latency |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Physics | 60.06% | 52.62% | 84.44% | 9.390 m | — | — |
-| MLP | 89.70% | 85.06% | 91.53% | 3.907 m | 2,980 | — |
-| GRU | 91.39% | 87.03% | 89.82% | 3.227 m | 16,996 | — |
-| Causal TCN | 86.01% | 80.36% | 86.04% | 2.997 m | 44,036 | 1.660 ms |
-| Lightweight Transformer | 88.39% | 83.47% | 89.59% | 3.395 m | 40,196 | 1.403 ms |
+| Physics | 60.06% | 52.62% | 84.44% | 9.390 m | 0 | 0.001 ms (CPU scalar) |
+| MLP | 89.70% | 85.06% | 91.53% | 3.907 m | 2,980 | 0.055 ms (CPU) |
+| GRU | 91.39% | 87.03% | 89.82% | 3.227 m | 16,996 | 0.458 ms (CPU) |
+| Causal TCN | 86.01% | 80.36% | 86.04% | 2.997 m | 44,036 | 1.569 ms (CPU) |
+| Lightweight Transformer | 88.39% | 83.47% | 89.59% | 3.395 m | 40,196 | 1.040 ms (CPU) |
 
 TCN 的距离 MAE 最低，GRU 保持最高分类指标。V3 模型均不读取未来帧、`brake_state`、标签字段，且不会跨 `scenario_id` 形成窗口。
+
+完整端点对齐结果与每模型 batch-1/batch-256 latency 位于 `results/v3/aligned_endpoint_comparison.csv`；运行环境（GPU 名称、PyTorch、CUDA runtime 和计时协议）位于 `results/v3/deployment_metrics.json`。本次基准为 PyTorch 2.14.0+cpu，CUDA 不可用、GPU 名称为空；若在 CUDA 主机复跑，文件会保存具体 GPU 名称和 runtime。Physics 是 CPU 上的 Python 标量基线，其延迟不应与 GPU 神经网络直接横比。
+
+5/10/20-step 的轻量消融只读取 validation history，不调用 test：TCN 的最小 validation loss 分别为 0.421 / 0.458 / 0.442，Transformer 为 0.482 / 0.429 / 0.424。原始汇总保存在 `results/v3/tcn_validation_length_ablation.csv` 和 `results/v3/transformer_validation_length_ablation.csv`；主测试仍固定使用预先指定的 10-step checkpoint。
