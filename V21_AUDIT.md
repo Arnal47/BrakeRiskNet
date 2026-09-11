@@ -15,4 +15,5 @@ V2 generated `brake_state` with `risk_level != 'Safe'`, then generated `ego_acce
 
 ## Result interpretation
 
-V2.1 is the authoritative neural-baseline result. Its lower metrics are expected after removing proxy shortcuts. See `results/v21/model_comparison.csv` and `results/v21/data_audit.json`.
+V2.1 is the authoritative neural-baseline result. Its lower metrics are expected after removing proxy shortcuts. See `results/v21/aligned_endpoint_comparison.csv` for the main aligned comparison, `results/v21/all_frame_comparison.csv` for the all-frame appendix, and `results/v21/data_audit_primary.json` for the primary-experiment audit.
+

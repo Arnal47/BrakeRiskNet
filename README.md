@@ -60,7 +60,7 @@ V1 的 99% 指标不可信，因为标签直接沿用了 Physics Baseline 的公
 
 V2.1 不修改 V1.5 Ground Truth Simulator 的标签逻辑，而是在独立生成器中重建观测—控制链路：控制器只读取延迟、带噪的当前或过去速度与距离观测；`ttc` 由这些观测重算；制动命令经过驾驶员反应延迟、执行器延迟和制动力建立过程后才影响车辆加速度。主 MLP 和 GRU 都**不输入 `brake_state`**。所有切分仍按 `scenario_id` 固定为 70/15/15，scaler 仅在 train 拟合，validation 用于 early stopping，test 只用于最终评估。
 
-V2.1 数据审计报告在 `results/v21/data_audit.json`：210/45/45 个场景，scenario overlap 为 0；禁用字段没有进入输入；TTC 可由保存的观测字段重算，`sensor_delay_ms` 与记录的 `effective_delay_ms` 完全一致（0/200/400 ms）；8 分位单特征 sanity check 没有发现验证准确率超过 95% 的代理变量。
+V2.1 数据审计报告在 `results/v21/data_audit_primary.json`：210/45/45 个场景，scenario overlap 为 0；禁用字段没有进入输入；TTC 可由保存的观测字段重算，`sensor_delay_ms` 与记录的 `effective_delay_ms` 完全一致（0/200/400 ms）；8 分位单特征 sanity check 没有发现验证准确率超过 95% 的代理变量。
 
 | Model | Accuracy | Macro F1 | Emergency Recall | Distance MAE | Distance RMSE |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -82,4 +82,5 @@ python -m training.evaluate_v21 --model mlp --feature-set without_brake_state
 python -m training.evaluate_v21 --model gru --feature-set without_brake_state
 python -m training.report_v21
 ```
+
 
