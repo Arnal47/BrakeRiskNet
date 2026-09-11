@@ -133,3 +133,31 @@ TCN 的距离 MAE 最低，GRU 保持最高分类指标。V3 模型均不读取�
 完整端点对齐结果与每模型 batch-1/batch-256 latency 位于 `results/v3/aligned_endpoint_comparison.csv`；运行环境（GPU 名称、PyTorch、CUDA runtime 和计时协议）位于 `results/v3/deployment_metrics.json`。本次基准为 PyTorch 2.14.0+cpu，CUDA 不可用、GPU 名称为空；若在 CUDA 主机复跑，文件会保存具体 GPU 名称和 runtime。Physics 是 CPU 上的 Python 标量基线，其延迟不应与 GPU 神经网络直接横比。
 
 5/10/20-step 的轻量消融只读取 validation history，不调用 test：TCN 的最小 validation loss 分别为 0.421 / 0.458 / 0.442，Transformer 为 0.482 / 0.429 / 0.424。原始汇总保存在 `results/v3/tcn_validation_length_ablation.csv` 和 `results/v3/transformer_validation_length_ablation.csv`；主测试仍固定使用预先指定的 10-step checkpoint。
+
+## V4：鲁棒性、可解释性与交互展示
+
+V4 不再追逐 test 指标。它冻结 V2.1/V3 checkpoint，在同一批 3,195 个 held-out endpoints 上做描述性压力测试与遮挡解释；不会训练、调参或以这些结果选择模型。
+
+```text
+Noisy observations → train-only scaler → 10-step causal window
+                                      ├→ GRU: classification reference
+                                      ├→ TCN: stopping-distance reference
+                                      └→ Transformer: lightweight temporal comparator
+                                                     ↓
+                       robustness / masking explanations / static scenario demo
+```
+
+压力测试覆盖确定性传感器噪声、额外一帧观测延迟、末端 distance/relative-speed/TTC dropout（均值插补）与低附着扰动。结果位于 `results/v4/robustness_stress_test.csv`：所有模型在轻微噪声与额外延迟下仅小幅下降，而 dropout 对 Transformer 的影响最大；低附着主要恶化停车距离 MAE，反映了冻结模型在分布外制动条件下的局限。
+
+可解释性使用“遮挡后 Macro F1 下降”而非梯度归因。`results/v4/feature_masking.csv` 显示 distance 与 relative_speed 是两类时序模型的主要分类依据；`results/v4/temporal_masking_heatmap.png` 与 `timestep_masking.csv` 显示最近时刻最重要，尤其是 Transformer 的当前端点。这些是模型行为诊断，并不证明因果关系。
+
+### 一键复现 V4
+
+```powershell
+python -m training.robustness_v4
+python -m training.interpret_v4
+python demo/build_assets.py
+python -m unittest tests.test_v4_guards
+```
+
+`tests/test_v4_guards.py` 守护 scenario split、train-only scaler、禁止字段、因果卷积的未来不可见性以及 sequence 不跨 scenario；GitHub Actions 在 PR 上运行相同 smoke test。交互 Demo 位于 `demo/index.html`：在该目录启动任意静态服务器后，可选择 held-out scenario、模型与端点，查看速度/间距/TTC、风险和真实/预测停车距离时间线。
