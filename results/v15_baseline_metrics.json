@@ -1,0 +1,151 @@
+{
+  "v1_reference": {
+    "accuracy": 0.9929348,
+    "macro_f1": 0.9924168,
+    "mae": 0.2108989,
+    "rmse": 0.2983203
+  },
+  "v15": {
+    "accuracy": 0.2613888888888889,
+    "macro_f1": 0.21648016414659146,
+    "mae": 12.435684343453964,
+    "rmse": 17.410236114814168,
+    "per_class": {
+      "Safe": {
+        "precision": 0.8900462962962963,
+        "recall": 0.2537953795379538,
+        "f1": 0.39496661530559835,
+        "support": 3030
+      },
+      "Warning": {
+        "precision": 0.20394736842105263,
+        "recall": 0.14418604651162792,
+        "f1": 0.16893732970027248,
+        "support": 430
+      },
+      "Emergency": {
+        "precision": 0.04523026315789474,
+        "recall": 0.7857142857142857,
+        "f1": 0.08553654743390358,
+        "support": 140
+      }
+    }
+  },
+  "risk_distribution": {
+    "Safe": 20054,
+    "Emergency": 1018,
+    "Warning": 2928
+  },
+  "split_scenarios": {
+    "train": 210,
+    "validation": 45,
+    "test": 45
+  },
+  "scenario_overlap": 0,
+  "condition_slices": {
+    "sudden_braking": {
+      "accuracy": 0.86,
+      "macro_f1": 0.6779410632858514,
+      "mae": 6.329104995694471,
+      "rmse": 9.575155459530864,
+      "per_class": {
+        "Safe": {
+          "precision": 0.8708206686930091,
+          "recall": 1.0,
+          "f1": 0.9309504467912266,
+          "support": 573
+        },
+        "Warning": {
+          "precision": 0.425,
+          "recall": 0.16666666666666666,
+          "f1": 0.23943661971830985,
+          "support": 102
+        },
+        "Emergency": {
+          "precision": 0.9607843137254902,
+          "recall": 0.784,
+          "f1": 0.8634361233480177,
+          "support": 125
+        }
+      }
+    },
+    "wet_low_adhesion": {
+      "accuracy": 0.28125,
+      "macro_f1": 0.2532385378324384,
+      "mae": 13.771882078239479,
+      "rmse": 20.741871315690627,
+      "per_class": {
+        "Safe": {
+          "precision": 0.9044585987261147,
+          "recall": 0.23785594639865998,
+          "f1": 0.376657824933687,
+          "support": 597
+        },
+        "Warning": {
+          "precision": 0.5833333333333334,
+          "recall": 0.109375,
+          "f1": 0.1842105263157895,
+          "support": 128
+        },
+        "Emergency": {
+          "precision": 0.11147011308562198,
+          "recall": 0.92,
+          "f1": 0.1988472622478386,
+          "support": 75
+        }
+      }
+    },
+    "high_speed": {
+      "accuracy": 0.0,
+      "macro_f1": 0.0,
+      "mae": 16.490290630301313,
+      "rmse": 21.29488485559882,
+      "per_class": {
+        "Safe": {
+          "precision": 0,
+          "recall": 0.0,
+          "f1": 0,
+          "support": 901
+        },
+        "Warning": {
+          "precision": 0,
+          "recall": 0.0,
+          "f1": 0,
+          "support": 139
+        },
+        "Emergency": {
+          "precision": 0.0,
+          "recall": 0,
+          "f1": 0,
+          "support": 0
+        }
+      }
+    },
+    "sensor_delay": {
+      "accuracy": 0.2716216216216216,
+      "macro_f1": 0.22638298102440754,
+      "mae": 12.329615036977364,
+      "rmse": 17.44683529017593,
+      "per_class": {
+        "Safe": {
+          "precision": 0.8922651933701657,
+          "recall": 0.26238830219333875,
+          "f1": 0.4055241682360326,
+          "support": 2462
+        },
+        "Warning": {
+          "precision": 0.20202020202020202,
+          "recall": 0.16,
+          "f1": 0.17857142857142858,
+          "support": 375
+        },
+        "Emergency": {
+          "precision": 0.05054151624548736,
+          "recall": 0.7967479674796748,
+          "f1": 0.0950533462657614,
+          "support": 123
+        }
+      }
+    }
+  }
+}

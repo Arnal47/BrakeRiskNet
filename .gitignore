@@ -1,0 +1,20 @@
+# Local Python environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+
+# Regenerable synthetic datasets and scenario splits
+data/*.csv
+data/v15_splits/
+data/splits/
+
+# Local trained weights and derived normalization state
+checkpoints/*.pt
+results/v2/train_scaler.npz
+
+# Temporary editor / operating system files
+.vscode/
+.idea/
+*.log
+*.tmp
+Thumbs.db

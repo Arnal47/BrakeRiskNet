@@ -1,0 +1,24 @@
+{
+  "scenario_counts": {
+    "train": 210,
+    "validation": 45,
+    "test": 45
+  },
+  "scenario_overlap": 0,
+  "features": [
+    "ego_speed",
+    "lead_speed",
+    "distance",
+    "relative_speed",
+    "ttc",
+    "ego_acceleration",
+    "road_friction",
+    "road_slope",
+    "vehicle_mass",
+    "reaction_time",
+    "sensor_delay_ms",
+    "brake_state"
+  ],
+  "forbidden_features_found": [],
+  "scaler_fit": "train only"
+}
