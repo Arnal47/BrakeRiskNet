@@ -83,4 +83,33 @@ python -m training.evaluate_v21 --model gru --feature-set without_brake_state
 python -m training.report_v21
 ```
 
+## V3：因果时序模型与公平端点比较
+
+V3 严格复用 V2.1 的生成数据、标签、scenario-level train/validation/test split、leakage audit 与仅由 train 拟合的 scaler；主实验仍为 `without_brake_state`。新增模型全部以过去和当前的 10 个时间步（2 秒）预测当前端点，且每段序列按 `scenario_id` 独立构建，绝不跨场景。
+
+- **Causal TCN**：48 通道、3 个 dilation 为 1/2/4 的 left-padded causal residual Conv1D block；卷积在时刻 *t* 无法读取 *t* 之后的帧。
+- **Lightweight Transformer**：48 维输入投影与正弦位置编码、2 层/4 heads Transformer Encoder，并施加上三角 causal mask；仅取末端 token 进入共享分类与制动距离回归头。
+- 所有神经模型使用 endpoint 训练标签计算 class weights、weighted CrossEntropy + 0.05×SmoothL1、AdamW、固定 seed，并只以 validation early stopping 选择 checkpoint。5/10/20 步只可作为 validation ablation；主测试固定为 10 步，不能据 test 调参。
+
+V3 的最终表以 GRU 的 10-step test endpoints 为唯一索引，将 Physics、MLP、GRU、TCN、Transformer 重新过滤到同一端点；因此它不会把 MLP/Physics 的全部帧结果误与时序模型相比。训练与评估会同时记录 checkpoint、history、预测、混淆矩阵、参数量，以及 CPU 上 warm-up 后的 batch-1 / batch-256 推理延迟。
+
+```powershell
+py -m training.train_v3 --model tcn --sequence-length 10
+py -m training.evaluate_v3 --model tcn --sequence-length 10
+py -m training.train_v3 --model transformer --sequence-length 10
+py -m training.evaluate_v3 --model transformer --sequence-length 10
+py -m training.report_v3
+```
+
+若要完成要求的 validation-only 长度消融，分别训练 5、10、20 steps（不执行对应 test evaluation），然后汇总：
+
+```powershell
+py -m training.train_v3 --model tcn --sequence-length 5
+py -m training.train_v3 --model tcn --sequence-length 20
+py -m training.report_v3_ablation --model tcn
+py -m training.train_v3 --model transformer --sequence-length 5
+py -m training.train_v3 --model transformer --sequence-length 20
+py -m training.report_v3_ablation --model transformer
+```
+
 
