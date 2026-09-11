@@ -1,0 +1,53 @@
+{
+  "accuracy": 0.8838810641627542,
+  "macro_f1": 0.8347281914353397,
+  "weighted_f1": 0.8961637990250564,
+  "emergency_recall": 0.8958810068649885,
+  "mae": 3.3951478903359664,
+  "rmse": 6.110628413963237,
+  "per_class": {
+    "Safe": {
+      "precision": 0.9834757834757835,
+      "recall": 0.8708375378405651,
+      "f1": 0.9237356168049237,
+      "support": 1982
+    },
+    "Warning": {
+      "precision": 0.5023923444976076,
+      "recall": 0.9292035398230089,
+      "f1": 0.6521739130434783,
+      "support": 339
+    },
+    "Emergency": {
+      "precision": 0.9630996309963099,
+      "recall": 0.8958810068649885,
+      "f1": 0.9282750444576171,
+      "support": 874
+    }
+  },
+  "confusion_matrix": [
+    [
+      1726,
+      249,
+      7
+    ],
+    [
+      1,
+      315,
+      23
+    ],
+    [
+      28,
+      63,
+      783
+    ]
+  ],
+  "test_samples": 3195,
+  "model": "transformer",
+  "feature_set": "without_brake_state",
+  "sequence_length": 10,
+  "parameters": 40196,
+  "latency_ms_batch_1": 1.4029140000639018,
+  "latency_ms_batch_256": 1.5465569999651052,
+  "latency_device": "cuda"
+}

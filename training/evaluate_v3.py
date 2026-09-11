@@ -13,12 +13,14 @@ def build(name, input_dim):
     return TCNCausalBaseline(input_dim) if name == 'tcn' else TransformerCausalBaseline(input_dim)
 
 
-def latency(model, example):
+def latency(model, example, device):
     # Warm-up avoids recording one-time kernel/library initialization.
     with torch.no_grad():
         for _ in range(20): model(example)
+        if device.type == 'cuda': torch.cuda.synchronize()
         started = time.perf_counter()
         for _ in range(100): model(example)
+        if device.type == 'cuda': torch.cuda.synchronize()
     return (time.perf_counter() - started) * 1000 / 100
 
 
@@ -28,15 +30,15 @@ def main():
     args = parser.parse_args(); parts, _ = audit(args.feature_set)
     checkpoint_path = Path(f'checkpoints/best_{args.model}_v3_{args.feature_set}_len{args.sequence_length}.pt')
     checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-    model = build(args.model, len(checkpoint['features'])); model.load_state_dict(checkpoint['state_dict']); model.eval()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'); model = build(args.model, len(checkpoint['features'])).to(device); model.load_state_dict(checkpoint['state_dict']); model.eval()
     test = Sequences(parts['test'], np.asarray(checkpoint['mean'], dtype=np.float32), np.asarray(checkpoint['std'], dtype=np.float32), checkpoint['features'], checkpoint['sequence_length'])
     loader = DataLoader(test, batch_size=256); ys=[]; ps=[]; ds=[]; dp=[]
     with torch.no_grad():
         for x, y, d in loader:
-            logits, prediction = model(x); ys += y.tolist(); ps += logits.argmax(1).tolist(); ds += d.tolist(); dp += prediction.tolist()
+            logits, prediction = model(x.to(device)); ys += y.tolist(); ps += logits.argmax(1).cpu().tolist(); ds += d.tolist(); dp += prediction.cpu().tolist()
     result = metrics(ys, ps, ds, dp)
-    example = test[0][0].unsqueeze(0)
-    result.update({'model': args.model, 'feature_set': args.feature_set, 'sequence_length': checkpoint['sequence_length'], 'parameters': sum(p.numel() for p in model.parameters()), 'latency_ms_batch_1_cpu': latency(model, example), 'latency_ms_batch_256_cpu': latency(model, example.repeat(256, 1, 1)), 'latency_device': 'cpu'})
+    example = test[0][0].unsqueeze(0).to(device)
+    result.update({'model': args.model, 'feature_set': args.feature_set, 'sequence_length': checkpoint['sequence_length'], 'parameters': sum(p.numel() for p in model.parameters()), 'latency_ms_batch_1': latency(model, example, device), 'latency_ms_batch_256': latency(model, example.repeat(256, 1, 1), device), 'latency_device': str(device)})
     root = Path('results/v3'); root.mkdir(parents=True, exist_ok=True); name = f'{args.model}_{args.feature_set}_len{args.sequence_length}'
     (root / f'{name}_metrics.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
     metadata = endpoint_rows(parts['test'], checkpoint['sequence_length'])
@@ -47,3 +49,8 @@ def main():
 
 
 if __name__ == '__main__': main()
+
+
+
+
+
