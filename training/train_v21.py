@@ -25,7 +25,8 @@ def main():
     train=dataset(parts['train'],mean,std,features,**kwargs); val=dataset(parts['validation'],mean,std,features,**kwargs)
     train_loader=DataLoader(train,batch_size=128,shuffle=True); val_loader=DataLoader(val,batch_size=256)
     device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'); model=(GRUBaseline(len(features)) if a.model=='gru' else MLPBaseline(len(features))).to(device)
-    counts=np.bincount([LABEL_MAP[r['risk_level']] for r in parts['train']],minlength=3); weights=torch.tensor(counts.sum()/(3*counts),dtype=torch.float32,device=device)
+    # GRU 的权重必须来自实际 sequence endpoint 标签；MLP 则等于 train 行标签。
+    counts=np.bincount([train[i][1].item() for i in range(len(train))],minlength=3); weights=torch.tensor(counts.sum()/(3*counts),dtype=torch.float32,device=device)
     ce=torch.nn.CrossEntropyLoss(weight=weights); opt=torch.optim.AdamW(model.parameters(),lr=1e-3,weight_decay=1e-4)
     best=float('inf'); wait=0; history=[]; Path('checkpoints').mkdir(exist_ok=True)
     for epoch in range(1,a.epochs+1):
@@ -43,3 +44,4 @@ def main():
         w=csv.DictWriter(f,fieldnames=history[0].keys());w.writeheader();w.writerows(history)
     print({'device':str(device),'train_samples':len(train),'validation_samples':len(val),'class_weights':weights.tolist(),'audit':summary})
 if __name__=='__main__': main()
+

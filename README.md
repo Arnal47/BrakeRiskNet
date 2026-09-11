@@ -60,17 +60,17 @@ V1 的 99% 指标不可信，因为标签直接沿用了 Physics Baseline 的公
 
 V2.1 不修改 V1.5 Ground Truth Simulator 的标签逻辑，而是在独立生成器中重建观测—控制链路：控制器只读取延迟、带噪的当前或过去速度与距离观测；`ttc` 由这些观测重算；制动命令经过驾驶员反应延迟、执行器延迟和制动力建立过程后才影响车辆加速度。主 MLP 和 GRU 都**不输入 `brake_state`**。所有切分仍按 `scenario_id` 固定为 70/15/15，scaler 仅在 train 拟合，validation 用于 early stopping，test 只用于最终评估。
 
-V2.1 数据审计报告在 `results/v21/data_audit.json`：210/45/45 个场景，scenario overlap 为 0；禁用字段没有进入输入；TTC 可由保存的观测字段重算；8 分位单特征 sanity check 没有发现验证准确率超过 95% 的代理变量。
+V2.1 数据审计报告在 `results/v21/data_audit.json`：210/45/45 个场景，scenario overlap 为 0；禁用字段没有进入输入；TTC 可由保存的观测字段重算，`sensor_delay_ms` 与记录的 `effective_delay_ms` 完全一致（0/200/400 ms）；8 分位单特征 sanity check 没有发现验证准确率超过 95% 的代理变量。
 
 | Model | Accuracy | Macro F1 | Emergency Recall | Distance MAE | Distance RMSE |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Physics Baseline | 62.33% | 53.14% | 84.61% | 11.189 m | 17.881 m |
-| MLP（主实验，无 brake_state） | 91.67% | 88.24% | 90.37% | 5.074 m | 9.901 m |
-| GRU（主实验，无 brake_state） | 94.49% | 91.04% | 90.55% | 3.339 m | 5.972 m |
-| MLP 消融：无 ego_acceleration | 91.56% | 88.07% | 87.22% | 5.265 m | 10.065 m |
-| MLP 消融：两者均无 | 90.97% | 87.24% | 87.31% | 4.990 m | 9.526 m |
+| Physics Baseline | 60.06% | 52.62% | 84.44% | 9.390 m | 15.047 m |
+| MLP（主实验，无 brake_state） | 89.70% | 85.06% | 91.53% | 3.907 m | 7.321 m |
+| GRU（主实验，无 brake_state） | 91.39% | 87.03% | 89.82% | 3.227 m | 5.995 m |
+| MLP 消融：无 ego_acceleration | 88.75% | 84.41% | 85.74% | 4.450 m | 8.190 m |
+| MLP 消融：两者均无 | 87.06% | 82.10% | 88.78% | 4.417 m | 7.986 m |
 
-GRU 用 10 个历史步（2 秒），故在同一 45 个 test 场景上有 3,195 个有效序列末端；其余模型有 3,600 个时间步。完整固定测试结果、预测、混淆矩阵和训练历史在 `results/v21/`。checkpoint 不提交 Git，训练后会产生于 `checkpoints/best_<model>_v21_<feature_set>.pt`。
+README 主表采用 **aligned endpoint**：Physics、MLP、GRU 都只在 GRU 可评估的同一 3,195 个序列端点比较。完整 3,600 帧结果（含消融）保留在 `results/v21/all_frame_comparison.csv`；主表的对齐结果在 `results/v21/aligned_endpoint_comparison.csv`。GRU 用 10 个历史步（2 秒）。完整固定测试结果、预测、混淆矩阵和训练历史在 `results/v21/`。checkpoint 不提交 Git，训练后会产生于 `checkpoints/best_<model>_v21_<feature_set>.pt`。
 
 ```powershell
 python data/generate_v21_dataset.py --scenarios 300 --steps 80 --seed 2026
@@ -82,3 +82,4 @@ python -m training.evaluate_v21 --model mlp --feature-set without_brake_state
 python -m training.evaluate_v21 --model gru --feature-set without_brake_state
 python -m training.report_v21
 ```
+
