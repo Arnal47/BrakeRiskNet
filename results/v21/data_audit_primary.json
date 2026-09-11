@@ -1,0 +1,46 @@
+{
+  "scenario_counts": {
+    "train": 210,
+    "validation": 45,
+    "test": 45
+  },
+  "scenario_overlap": 0,
+  "feature_set": "without_brake_state",
+  "features": [
+    "ego_speed",
+    "lead_speed",
+    "distance",
+    "relative_speed",
+    "ttc",
+    "ego_acceleration",
+    "road_friction",
+    "road_slope",
+    "vehicle_mass",
+    "reaction_time",
+    "sensor_delay_ms"
+  ],
+  "forbidden_features_found": [],
+  "ttc_max_relative_recompute_error": 0.00468,
+  "sensor_delay_matches_effective_delay": true,
+  "effective_delay_ms_values": [
+    0,
+    200,
+    400
+  ],
+  "scaler_fit": "train only",
+  "single_feature_validation_accuracy": {
+    "ego_speed": 0.5636,
+    "lead_speed": 0.5219,
+    "distance": 0.7289,
+    "relative_speed": 0.7517,
+    "ttc": 0.805,
+    "ego_acceleration": 0.5472,
+    "road_friction": 0.5494,
+    "road_slope": 0.5497,
+    "vehicle_mass": 0.5494,
+    "reaction_time": 0.5494,
+    "sensor_delay_ms": 0.5494,
+    "brake_state": 0.5494
+  },
+  "suspicious_single_features_over_0_95": []
+}

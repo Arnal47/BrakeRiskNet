@@ -53,3 +53,34 @@ V1 的 99% 指标不可信，因为标签直接沿用了 Physics Baseline 的公
 ## 本地 checkpoint 与复现
 
 为保持 Git 仓库轻量，训练权重不会提交：`checkpoints/best_mlp_v2.pt` 与 `checkpoints/best_gru_v2.pt` 均由 `.gitignore` 排除。克隆后，请先运行 V1.5 生成与场景级切分命令，再运行对应的 V2 训练命令；最佳 checkpoint 会在相同路径自动生成。之后可运行 `python -m training.evaluate_v2 --model mlp` 或 `python -m training.evaluate_v2 --model gru`，所有测试结果始终使用固定的 V1.5 test split。
+
+## V2.1：移除 proxy leakage 的因果基线
+
+> **V2 历史结果作废。** 原 V2 的 `brake_state` 由 `risk_level != Safe` 直接生成，`ego_acceleration` 又由该状态驱动，且 TTC 由隐藏真实状态计算；因此旧 V2 的高指标不能代表真实泛化能力。
+
+V2.1 不修改 V1.5 Ground Truth Simulator 的标签逻辑，而是在独立生成器中重建观测—控制链路：控制器只读取延迟、带噪的当前或过去速度与距离观测；`ttc` 由这些观测重算；制动命令经过驾驶员反应延迟、执行器延迟和制动力建立过程后才影响车辆加速度。主 MLP 和 GRU 都**不输入 `brake_state`**。所有切分仍按 `scenario_id` 固定为 70/15/15，scaler 仅在 train 拟合，validation 用于 early stopping，test 只用于最终评估。
+
+V2.1 数据审计报告在 `results/v21/data_audit_primary.json`：210/45/45 个场景，scenario overlap 为 0；禁用字段没有进入输入；TTC 可由保存的观测字段重算，`sensor_delay_ms` 与记录的 `effective_delay_ms` 完全一致（0/200/400 ms）；8 分位单特征 sanity check 没有发现验证准确率超过 95% 的代理变量。
+
+| Model | Accuracy | Macro F1 | Emergency Recall | Distance MAE | Distance RMSE |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Physics Baseline | 60.06% | 52.62% | 84.44% | 9.390 m | 15.047 m |
+| MLP（主实验，无 brake_state） | 89.70% | 85.06% | 91.53% | 3.907 m | 7.321 m |
+| GRU（主实验，无 brake_state） | 91.39% | 87.03% | 89.82% | 3.227 m | 5.995 m |
+| MLP 消融：无 ego_acceleration | 88.75% | 84.41% | 85.74% | 4.450 m | 8.190 m |
+| MLP 消融：两者均无 | 87.06% | 82.10% | 88.78% | 4.417 m | 7.986 m |
+
+README 主表采用 **aligned endpoint**：Physics、MLP、GRU 都只在 GRU 可评估的同一 3,195 个序列端点比较。完整 3,600 帧结果（含消融）保留在 `results/v21/all_frame_comparison.csv`；主表的对齐结果在 `results/v21/aligned_endpoint_comparison.csv`。GRU 用 10 个历史步（2 秒）。完整固定测试结果、预测、混淆矩阵和训练历史在 `results/v21/`。checkpoint 不提交 Git，训练后会产生于 `checkpoints/best_<model>_v21_<feature_set>.pt`。
+
+```powershell
+python data/generate_v21_dataset.py --scenarios 300 --steps 80 --seed 2026
+python -c "from utils.split import write_splits; print(write_splits('data/synthetic_driving_v21.csv', 'data/v21_splits', 42))"
+python -m training.train_v21 --model mlp --feature-set without_brake_state
+python -m training.train_v21 --model gru --feature-set without_brake_state
+python -m training.evaluate_v21_physics
+python -m training.evaluate_v21 --model mlp --feature-set without_brake_state
+python -m training.evaluate_v21 --model gru --feature-set without_brake_state
+python -m training.report_v21
+```
+
+
