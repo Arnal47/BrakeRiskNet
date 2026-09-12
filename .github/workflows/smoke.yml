@@ -15,4 +15,6 @@ jobs:
           python-version: '3.12'
       - run: pip install numpy
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: python data/generate_v21_dataset.py --scenarios 300 --steps 80 --seed 2026
+      - run: python -c "from utils.split import write_splits; write_splits('data/synthetic_driving_v21.csv', 'data/v21_splits', 42)"
       - run: python -m unittest tests.test_v4_guards

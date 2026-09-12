@@ -147,7 +147,7 @@ Noisy observations → train-only scaler → 10-step causal window
                        robustness / masking explanations / static scenario demo
 ```
 
-压力测试覆盖确定性传感器噪声、额外一帧观测延迟、末端 distance/relative-speed/TTC dropout（均值插补）与低附着扰动。结果位于 `results/v4/robustness_stress_test.csv`：所有模型在轻微噪声与额外延迟下仅小幅下降，而 dropout 对 Transformer 的影响最大；低附着主要恶化停车距离 MAE，反映了冻结模型在分布外制动条件下的局限。
+压力测试覆盖确定性传感器噪声、额外一帧观测延迟、末端 distance/relative-speed/TTC dropout（均值插补）与低附着扰动。结果位于 `results/v4/robustness_stress_test.csv`：所有模型在轻微噪声与额外延迟下仅小幅下降，而 dropout 对 Transformer 的影响最大；低附着主要恶化停车距离 MAE，反映了冻结模型在分布外制动条件下的局限。这里的 `low_friction` 是**固定标签不变**的输入/协变量扰动：仅将模型窗口中的观测 `road_friction` 下调 0.25，不重新运行仿真，也不把它解释成“低附着导致的反事实 ground truth”。
 
 可解释性使用“遮挡后 Macro F1 下降”而非梯度归因。`results/v4/feature_masking.csv` 显示 distance 与 relative_speed 是两类时序模型的主要分类依据；`results/v4/temporal_masking_heatmap.png` 与 `timestep_masking.csv` 显示最近时刻最重要，尤其是 Transformer 的当前端点。这些是模型行为诊断，并不证明因果关系。
 
